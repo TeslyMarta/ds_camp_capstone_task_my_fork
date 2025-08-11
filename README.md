@@ -1,25 +1,6 @@
 # DS CAMP Capstone Project 2025
-
-## Що містить це репо
-
-Репозиторій містить простенький код для запуску Streamlit UI (веб інтерфейс) та FastAPI API (бекенд).
-
-Веб інтерфейс дозволяє отримати результати векторного пошуку для декількох продуктів та поспілуватись із простеньким агентом для сумаризації повідомлення.
-
-## Виконання
-
-Спочатку виконуємо [Fork](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo) цього репозиторію.
-
-Потім вам потрібно відредагувати наступні файли:
-- [search_index.py](./src/ds_capstone/search_index.py)
-- [summarizer_graph.py](./src/ds_capstone/summarizer_graph.py)
-- [vectorizer.py](./src/ds_capstone/vectorizer.py)
-- [api.py](./api.py)
-
-Після того як всі файли відредаговані і всі тести працюють створюєте [Pull Request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request)
-
-В описі Pull Request вказуєте своє ім'я та прізвище.
-
-Вся документація та інструкції на англійській, якщо є проблеми то [перекладач](https://translate.google.com/) в поміч
-
-Для детальних інструкцій перейдіть у [instruction.ipynb](./instruction.ipynb).
+## Code passed review
+<img width="1352" height="563" alt="Знімок екрана 2025-08-10 142533" src="https://github.com/user-attachments/assets/3b95cad2-b9e6-4b5b-bfbf-4642cfb7c31b" />
+## Run website from code
+<img width="1919" height="1079" alt="Знімок екрана 2025-08-09 180013" src="https://github.com/user-attachments/assets/3d5535fa-434e-487e-b19d-b6fd4830ccc6" />
+<img width="1918" height="1069" alt="Знімок екрана 2025-08-10 142119" src="https://github.com/user-attachments/assets/10baf29a-859f-455d-bd32-e7bebf30cc69" />
