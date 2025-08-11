@@ -72,7 +72,7 @@ class AgentState(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]
 
 
-@...  #TODO: define a tool function to get the current date
+@tool  #TODO: define a tool function to get the current date
 def get_current_date() -> str:
     """
     Get the current date in a human-readable format.
@@ -149,7 +149,7 @@ class SummarizerAgent:
     'Summary of the provided text...'
     """
 
-    def __init__(self, model_name: str = "phi3") -> None:
+    def __init__(self, model_name: str = "qwen3:4b") -> None:
         """
         Initialize the SummarizerAgent with specified model and tools.
 
@@ -159,15 +159,15 @@ class SummarizerAgent:
             The name of the Ollama model to use, by default "phi3"
         """
         # 1. Define the tools the agent can use
-        self.tools = ...  #TODO: define the tools available to the agent
+        self.tools = [get_current_date]  #TODO: define the tools available to the agent
 
         # 2. Set up the language model with temperature from config
-        self.llm = ChatOllama(...)  #TODO: create ChatOllama instance with model_name and temperature from LLMConfig
+        self.llm = ChatOllama(model=model_name, temperature=LLMConfig.TEMPERATURE)  #TODO: create ChatOllama instance with model_name and temperature from LLMConfig
 
         # TODO: If you have problems running local Ollama models, you can use OpenAI or Gemini API from Langchain
 
         # 3. Bind the tools to the model to enable tool calling capabilities
-        self.model_with_tools = ...  #TODO: bind the tools to the llm
+        self.model_with_tools = self.llm.bind_tools(self.tools)  #TODO: bind the tools to the llm
 
         # 4. Build and compile the graph that defines the agent's logic
         self.graph = self._build_graph()
@@ -240,10 +240,10 @@ class SummarizerAgent:
         )
 
         # Create the processing chain: prompt -> model -> response
-        chain = ...  #TODO: create a chain that uses the prompt_template and model_with_tools
+        chain = prompt_template | self.model_with_tools  #TODO: create a chain that uses the prompt_template and model_with_tools
 
         # Invoke the chain with the conversation history
-        chain_result = ...  #TODO: invoke the chain with state["messages"] as input
+        chain_result = chain.invoke({"history": state["messages"]})  #TODO: invoke the chain with state["messages"] as input
 
         # Add the model's response to the message history
         # Note: Type checking issues here are due to LangGraph's complex typing
@@ -276,16 +276,16 @@ class SummarizerAgent:
         graph_builder = StateGraph(AgentState)
 
         # Add the main agent node that processes messages and generates responses
-        graph_builder...  #TODO: add node for sum_agent with name "agent"
+        graph_builder.add_node("agent", self.sum_agent)  #TODO: add node for sum_agent with name "agent"
 
         # Add the tools node that executes any requested tool calls
         tool_node = ToolNode(self.tools)
-        graph_builder...  #TODO: add node for tool_node with name "tools"
+        graph_builder.add_node("tools", tool_node)  #TODO: add node for tool_node with name "tools"
 
         # Define the conversation flow edges
-        graph_builder...  #TODO: Start with the agent
-        graph_builder...  #TODO: Conditional routing from agent to either tools or end
-        graph_builder...  #TODO: Return to agent after tool execution
+        graph_builder.add_edge(START, "agent") #TODO: Start with the agent
+        graph_builder.add_conditional_edges("agent", self.tool_router, {"tools": "tools", END: END})  #TODO: Conditional routing from agent to either tools or end
+        graph_builder.add_edge("tools", "agent")  #TODO: Return to agent after tool execution
 
         # Compile and return the executable graph
         return graph_builder.compile()

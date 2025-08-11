@@ -66,15 +66,15 @@ class TextVectorizer:
             If the specified model cannot be loaded.
         """
         # Load tokenizer and model from HuggingFace
-        self.tokenizer = #TODO: load tokenizer
-        self.model = #TODO: load model
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name) #TODO: load tokenizer
+        self.model = AutoModel.from_pretrained(model_name) #TODO: load model
 
         # Set device based on CUDA availability
-        self.device: str = #TODO: set device, you can use "cuda" or "cpu" directly
+        self.device: str = "cpu" #TODO: set device, you can use "cuda" or "cpu" directly
         # I recommend using cpu to avoid any issues with CUDA availability
 
         # Move model to the appropriate device
-        self.model...  #TODO: move model to device
+        self.model.to(self.device)  #TODO: move model to device
 
     def _average_pool(self, last_hidden_states: Tensor, attention_mask: Tensor) -> Tensor:
         """Perform average pooling on the last hidden states using attention mask.
@@ -105,10 +105,13 @@ class TextVectorizer:
         3. Dividing by the number of actual tokens (not padding)
         """
         # Mask out padding tokens by setting their hidden states to 0
-        last_hidden = #TODO: mask out padding tokens
+        input_mask_expanded = attention_mask.unsqueeze(-1).expand(last_hidden_states.size()).float()
+        last_hidden = last_hidden_states * input_mask_expanded #TODO: mask out padding tokens
 
         # Calculate average by summing and dividing by number of actual tokens
-        return #TODO: calculate average pooling
+        sum_hidden = torch.sum(last_hidden, dim=1)
+        sum_mask = input_mask_expanded.sum(dim=1).clamp(min=1e-9)
+        return sum_hidden / sum_mask #TODO: calculate average pooling
 
     def embed(self, texts: Union[List[str], str], is_query: bool = False) -> np.ndarray:
         """Convert text(s) into normalized embedding vectors.
@@ -150,27 +153,27 @@ class TextVectorizer:
 
         # Prepend query prefix if this is a query embedding
         if is_query:
-            texts = #TODO: prepend "query: " to each text
+            texts = [f"query: {text}" for text in texts] #TODO: prepend "query: " to each text
 
         # Tokenize texts with padding and truncation
         inputs = self.tokenizer(
-            ...,  #TODO: add inputs and parameters
-            padding=...,  # Pad shorter sequences to match longest
-            truncation=...,  # Truncate longer sequences
-            max_length=...,  # Maximum sequence length
-            return_tensors=...,  # Return PyTorch tensors
-        ).to(...)
+            texts,  #TODO: add inputs and parameters
+            padding=True,  # Pad shorter sequences to match longest
+            truncation=True,  # Truncate longer sequences
+            max_length=512,  # Maximum sequence length
+            return_tensors="pt",  # Return PyTorch tensors
+        ).to(self.device)
 
         # Generate embeddings without gradient computation (inference mode)
-        with ...:  #TODO: disable gradient computation
+        with torch.no_grad():  #TODO: disable gradient computation
             # Get model outputs (last hidden states and attention)
             outputs = self.model(**inputs)
 
             # Apply average pooling to get sentence-level embeddings
-            embeddings = ...  #TODO: apply average pooling
+            embeddings = self._average_pool(outputs.last_hidden_state, inputs['attention_mask'])  #TODO: apply average pooling
 
             # L2 normalize embeddings for cosine similarity compatibility
-            normalized_embeddings = ... #TODO: normalize embeddings
+            normalized_embeddings = F.normalize(embeddings, p=2, dim=1) #TODO: normalize embeddings
 
         # Return embeddings as numpy array on CPU
-        return ... #TODO: convert to numpy array and return
+        return normalized_embeddings.cpu().numpy() #TODO: convert to numpy array and return

@@ -44,9 +44,9 @@ class FaissSearchHandler:
         dimension : int
             The dimensionality of the vectors to be indexed.
         """
-        self.dimension: int = dimension
+        self.dimension = dimension
         # Initialize FAISS index with inner product similarity
-        self.index: faiss.IndexFlatIP = ...  #TODO: create FAISS index with provided dimension
+        self.index = faiss.IndexFlatIP(self.dimension)  #TODO: create FAISS index with provided dimension
 
     def build(self, embeddings: np.ndarray) -> None:
         """
@@ -61,7 +61,7 @@ class FaissSearchHandler:
             to be indexed. Each row represents a single vector.
         """
         # Add embeddings to the FAISS index
-        ...  #TODO: add embeddings to the index
+        self.index.add(embeddings)  #TODO: add embeddings to the index
 
     def search(self, query_embedding: np.ndarray, k: int) -> Tuple[np.ndarray, np.ndarray]:
         """
@@ -88,7 +88,8 @@ class FaissSearchHandler:
                 The indices of the k most similar vectors in the original dataset.
         """
         # Perform similarity search and return distances and indices
-        return ...  #TODO: perform search on the index with query_embedding and k
+        distances, indices = self.index.search(query_embedding, k)
+        return distances, indices  #TODO: perform search on the index with query_embedding and k
 
     def save(self, path: str) -> None:
         """
@@ -102,7 +103,7 @@ class FaissSearchHandler:
             The file path where the index should be saved.
         """
         # Write the FAISS index to the specified file path
-        ...  #TODO: write the index to the file at path
+        faiss.write_index(self.index, path)  #TODO: write the index to the file at path
 
     def load(self, path: str) -> bool:
         """
@@ -125,6 +126,6 @@ class FaissSearchHandler:
         # Check if the index file exists
         if os.path.exists(path):
             # Load the FAISS index from the file
-            self.index = ...  #TODO: load the index from the file at path
+            self.index = faiss.read_index(path)  #TODO: load the index from the file at path
             return True
         return False
